@@ -1,0 +1,78 @@
+# configs/guided.yaml — ViT-Guided CNN training configuration
+model:
+  name: guided                       # cnn | vit | hybrid | guided
+  cnn_name: efficientnet_b0
+  vit_name: vit_small_patch14_dinov2
+  pretrained: true
+  drop_rate: 0.3
+  use_freq_stream: true
+  use_spatial_gate: true
+
+data:
+  data_dir: data/processed
+  train_manifest: data/processed/train_manifest.jsonl
+  train_bin: data/processed/train.bin
+  val_manifest: data/processed/validation_manifest.jsonl
+  val_bin: data/processed/validation.bin
+  test_manifest: data/processed/test_manifest.jsonl
+  test_bin: data/processed/test.bin
+  crop_size: 224
+  num_workers: 4
+  pin_memory: true
+  persistent_workers: true
+  subset: null                        # int or null for full dataset
+
+training:
+  epochs: 20
+  micro_batch: 16                     # actual batch per gradient step
+  accum_steps: 4                      # effective batch = micro_batch * accum_steps = 64
+  label_smoothing: 0.05
+  aux_weight: 0.3                     # weight for auxiliary branch losses
+  grad_clip: 1.0
+  use_amp: true                       # bf16 autocast
+  use_channels_last: true
+  seed: 42
+
+  # Staged training schedule
+  stages:
+    - name: warmup_head
+      epochs: 2
+      freeze_backbones: true
+      lr_head: 1.0e-3
+      lr_backbone: 0.0
+    - name: finetune_cnn_vit_top
+      epochs: 4
+      freeze_backbones: false
+      lr_head: 1.0e-4
+      lr_backbone: 1.0e-5
+      unfreeze_vit_last_n: 4
+    - name: joint_finetune
+      epochs: 2
+      freeze_backbones: false
+      lr_head: 5.0e-5
+      lr_backbone: 5.0e-6
+
+optimizer:
+  type: adamw
+  weight_decay: 0.05
+  betas: [0.9, 0.999]
+  layer_decay: 0.75                   # LLRD multiplier per layer
+
+scheduler:
+  type: cosine
+  warmup_epochs: 2
+  min_lr: 1.0e-6
+
+ema:
+  enabled: true
+  decay: 0.9999
+
+checkpoints:
+  dir: checkpoints/guided
+  save_every: 2                       # epochs
+  keep_best: true
+  metric: val_auc
+
+logging:
+  tensorboard_dir: runs/guided
+  log_interval: 50                    # steps

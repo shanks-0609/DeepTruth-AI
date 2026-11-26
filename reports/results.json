@@ -1,0 +1,245 @@
+[
+  {
+    "model_name": "cnn",
+    "checkpoint": "checkpoints/cnn_baseline/best.pt",
+    "dataset": "FFHQ vs StyleGAN faces (256px)",
+    "split": "test",
+    "temperature": 1.158311128616333,
+    "metrics": {
+      "accuracy": 0.59615,
+      "precision": 0.5590493152367499,
+      "recall": 0.9103,
+      "f1": 0.692691093102005,
+      "auc_roc": 0.6652231399999999,
+      "ap": 0.6271238330141007,
+      "eer": 0.38275,
+      "ece": 0.11701420929282903,
+      "confusion_matrix": [
+        [
+          2820,
+          7180
+        ],
+        [
+          897,
+          9103
+        ]
+      ],
+      "n_samples": 20000,
+      "threshold": 0.59
+    },
+    "robustness": {
+      "none": {
+        "accuracy": 0.607,
+        "auc_roc": 0.6873751863766774
+      },
+      "jpeg95": {
+        "accuracy": 0.6025,
+        "auc_roc": 0.6860341743075689
+      },
+      "jpeg80": {
+        "accuracy": 0.5965,
+        "auc_roc": 0.6640069760627845
+      },
+      "jpeg60": {
+        "accuracy": 0.598,
+        "auc_roc": 0.6584064256578308
+      },
+      "blur": {
+        "accuracy": 0.599,
+        "auc_roc": 0.634481710335393
+      },
+      "resize_half": {
+        "accuracy": 0.6105,
+        "auc_roc": 0.6452653073877666
+      },
+      "noise": {
+        "accuracy": 0.602,
+        "auc_roc": 0.6176385587470288
+      }
+    },
+    "latency": {
+      "median_ms": 13.66270000107761,
+      "p95_ms": 16.469719999622612
+    },
+    "ood_scores": [
+      {
+        "file": "midjourney_astronaut.jpg",
+        "prob_fake": 0.652632886789119
+      },
+      {
+        "file": "real_lake_mountain.jpg",
+        "prob_fake": 0.45522562762612007
+      },
+      {
+        "file": "real_watchmaker.jpg",
+        "prob_fake": 0.424286991142991
+      },
+      {
+        "file": "stylegan_portrait.jpg",
+        "prob_fake": 0.6788878336975072
+      }
+    ]
+  },
+  {
+    "model_name": "vit",
+    "checkpoint": "checkpoints/vit_baseline/best.pt",
+    "dataset": "FFHQ vs StyleGAN faces (256px)",
+    "split": "test",
+    "temperature": 0.9726948142051697,
+    "metrics": {
+      "accuracy": 0.76545,
+      "precision": 0.7251675290525066,
+      "recall": 0.8549,
+      "f1": 0.7847078801229979,
+      "auc_roc": 0.8573460900000001,
+      "ap": 0.8564182143309222,
+      "eer": 0.22410000000000002,
+      "ece": 0.1811254541825503,
+      "confusion_matrix": [
+        [
+          6760,
+          3240
+        ],
+        [
+          1451,
+          8549
+        ]
+      ],
+      "n_samples": 20000,
+      "threshold": 0.58
+    },
+    "robustness": {
+      "none": {
+        "accuracy": 0.7735,
+        "auc_roc": 0.8669573026157235
+      },
+      "jpeg95": {
+        "accuracy": 0.7725,
+        "auc_roc": 0.8654947894531051
+      },
+      "jpeg80": {
+        "accuracy": 0.7445,
+        "auc_roc": 0.8543356890212013
+      },
+      "jpeg60": {
+        "accuracy": 0.723,
+        "auc_roc": 0.84481510333593
+      },
+      "blur": {
+        "accuracy": 0.759,
+        "auc_roc": 0.8595147356326207
+      },
+      "resize_half": {
+        "accuracy": 0.75,
+        "auc_roc": 0.8485026365237287
+      },
+      "noise": {
+        "accuracy": 0.6945,
+        "auc_roc": 0.7580918228264054
+      }
+    },
+    "latency": {
+      "median_ms": 9.406600000147591,
+      "p95_ms": 13.933309997992174
+    },
+    "ood_scores": [
+      {
+        "file": "midjourney_astronaut.jpg",
+        "prob_fake": 0.40527845492346054
+      },
+      {
+        "file": "real_lake_mountain.jpg",
+        "prob_fake": 0.5368293029165182
+      },
+      {
+        "file": "real_watchmaker.jpg",
+        "prob_fake": 0.3611771760745297
+      },
+      {
+        "file": "stylegan_portrait.jpg",
+        "prob_fake": 0.6276311257955983
+      }
+    ]
+  },
+  {
+    "model_name": "guided",
+    "checkpoint": "checkpoints/guided/best.pt",
+    "dataset": "FFHQ vs StyleGAN faces (256px)",
+    "split": "test",
+    "temperature": 0.7383207678794861,
+    "metrics": {
+      "accuracy": 0.8847,
+      "precision": 0.8795382794001578,
+      "recall": 0.8915,
+      "f1": 0.8854787445371474,
+      "auc_roc": 0.95596216,
+      "ap": 0.9553793540682735,
+      "eer": 0.11609999999999998,
+      "ece": 0.2918198154717684,
+      "confusion_matrix": [
+        [
+          8779,
+          1221
+        ],
+        [
+          1085,
+          8915
+        ]
+      ],
+      "n_samples": 20000,
+      "threshold": 0.69
+    },
+    "robustness": {
+      "none": {
+        "accuracy": 0.8875,
+        "auc_roc": 0.9614106526958743
+      },
+      "jpeg95": {
+        "accuracy": 0.8845,
+        "auc_roc": 0.9597841380572425
+      },
+      "jpeg80": {
+        "accuracy": 0.8625,
+        "auc_roc": 0.9472870255832302
+      },
+      "jpeg60": {
+        "accuracy": 0.8385,
+        "auc_roc": 0.9307388766498899
+      },
+      "blur": {
+        "accuracy": 0.858,
+        "auc_roc": 0.9375399378594407
+      },
+      "resize_half": {
+        "accuracy": 0.829,
+        "auc_roc": 0.9157487417386756
+      },
+      "noise": {
+        "accuracy": 0.5625,
+        "auc_roc": 0.7601898417085754
+      }
+    },
+    "latency": {
+      "median_ms": 25.09949999875971,
+      "p95_ms": 28.48484499718324
+    },
+    "ood_scores": [
+      {
+        "file": "midjourney_astronaut.jpg",
+        "prob_fake": 0.5109103821825075
+      },
+      {
+        "file": "real_lake_mountain.jpg",
+        "prob_fake": 0.3263305079187445
+      },
+      {
+        "file": "real_watchmaker.jpg",
+        "prob_fake": 0.5364741436322509
+      },
+      {
+        "file": "stylegan_portrait.jpg",
+        "prob_fake": 0.6851919970284077
+      }
+    ]
+  }
+]

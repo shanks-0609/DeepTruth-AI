@@ -1,0 +1,39 @@
+# configs/cnn_baseline.yaml
+model:
+  name: cnn
+  backbone_name: efficientnet_b0
+  pretrained: true
+  drop_rate: 0.3
+
+data:
+  train_manifest: data/processed/train_manifest.jsonl
+  train_bin: data/processed/train.bin
+  val_manifest: data/processed/validation_manifest.jsonl
+  val_bin: data/processed/validation.bin
+  test_manifest: data/processed/test_manifest.jsonl
+  test_bin: data/processed/test.bin
+  crop_size: 224
+  num_workers: 4
+  pin_memory: true
+  persistent_workers: true
+  subset: null
+
+training:
+  epochs: 15
+  micro_batch: 32
+  accum_steps: 2
+  label_smoothing: 0.05
+  grad_clip: 1.0
+  use_amp: true
+  use_channels_last: true
+  seed: 42
+  lr: 1.0e-4
+  weight_decay: 0.05
+
+checkpoints:
+  dir: checkpoints/cnn_baseline
+  metric: val_auc
+
+logging:
+  tensorboard_dir: runs/cnn_baseline
+  log_interval: 50

@@ -1,0 +1,51 @@
+# Windows & Office temporary lock files
+~$*
+Thumbs.db
+Desktop.ini
+*.pptx
+*.docx
+*.pdf
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+venv/
+.venv/
+ENV/
+
+# Large Datasets & Binary Shards (Cannot push multiple GBs to GitHub)
+Dataset/
+data/processed/
+*.parquet
+
+# Large Model Checkpoints (GitHub file limit is 100MB; checkpoints are 70MB - 324MB)
+checkpoints/
+
+# Logs & Caches
+*.log
+.pytest_cache/
+runs/
+.idea/
+.vscode/
+*.swp

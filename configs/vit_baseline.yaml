@@ -1,0 +1,38 @@
+# configs/vit_baseline.yaml
+model:
+  name: vit
+  backbone_name: vit_small_patch14_dinov2
+  pretrained: true
+  drop_rate: 0.3
+
+data:
+  train_manifest: data/processed/train_manifest.jsonl
+  train_bin: data/processed/train.bin
+  val_manifest: data/processed/validation_manifest.jsonl
+  val_bin: data/processed/validation.bin
+  test_manifest: data/processed/test_manifest.jsonl
+  test_bin: data/processed/test.bin
+  crop_size: 224
+  num_workers: 4
+  pin_memory: true
+  persistent_workers: true
+  subset: null
+
+training:
+  epochs: 6
+  micro_batch: 16
+  accum_steps: 4
+  label_smoothing: 0.05
+  grad_clip: 1.0
+  use_amp: true
+  seed: 42
+  lr: 5.0e-5
+  weight_decay: 0.05
+
+checkpoints:
+  dir: checkpoints/vit_baseline
+  metric: val_auc
+
+logging:
+  tensorboard_dir: runs/vit_baseline
+  log_interval: 50

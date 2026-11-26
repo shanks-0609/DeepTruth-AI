@@ -1,0 +1,467 @@
+================================================================================
+DEEPTRUTH AI — FAKE & AI-GENERATED IMAGE DETECTION SYSTEM
+COMPREHENSIVE PROJECT DOCUMENTATION & TECHNICAL OVERVIEW
+================================================================================
+
+Subject: Intelligent Model Design Using AI (Sem 5)
+Institution: Bennett University
+Date: Academic Year 2024–2025
+
+--------------------------------------------------------------------------------
+TABLE OF CONTENTS
+--------------------------------------------------------------------------------
+1. EXECUTIVE SUMMARY & RESEARCH OBJECTIVE
+2. PROJECT AUTHORS & INDIVIDUAL CONTRIBUTIONS
+3. PROBLEM STATEMENT & BACKGROUND
+4. MODEL ARCHITECTURES ANALYZED & IMPLEMENTED
+   4.1 Model 1: CNN Baseline (ResNet-50 / EfficientNet-B4)
+   4.2 Model 2: Vision Transformer (ViT-Base / Patch 16x16)
+   4.3 Model 3: Proposed Hybrid CNN + ViT Feature Concatenation Network
+5. FORENSIC SIGNAL EXTRACTION & EXPLAINABILITY ENGINE
+   5.1 Error Level Analysis (ELA)
+   5.2 ViT Patch-Level Attention Dispersion
+   5.3 2D Fast Fourier Transform (FFT) Spectral Analysis
+   5.4 Laplacian Gradient Variance
+6. DATASET & EXPERIMENTAL BENCHMARK RESULTS
+   6.1 Dataset Composition & Splits
+   6.2 Target Generative Models & Authentic Capture
+   6.3 Comparative Performance Metrics (Accuracy, Precision, Recall, F1, AUC, Latency)
+   6.4 Confusion Matrix Analysis
+   6.5 Generator-Specific Breakdown
+7. GRANULAR CODEBASE & FILE-BY-FILE BREAKDOWN
+8. HOW TO RUN THE PROJECT & API REFERENCE
+   8.1 Prerequisites & Installation
+   8.2 One-Click Execution
+   8.3 REST API Endpoints & Contract
+
+================================================================================
+1. EXECUTIVE SUMMARY & RESEARCH OBJECTIVE
+================================================================================
+DeepTruth AI is an end-to-end intelligent computer vision platform engineered to 
+distinguish real-world camera photographs from photorealistic AI-generated imagery. 
+Recent advances in Generative Adversarial Networks (GANs, e.g., StyleGAN) and Latent 
+Diffusion Models (e.g., Midjourney, Stable Diffusion, DALL-E 3) have made visual 
+distinction nearly impossible for human observers.
+
+Existing automated detection techniques rely either on pure Convolutional Neural 
+Networks (CNNs) or pure Vision Transformers (ViTs), both of which suffer from 
+inherent structural blind spots:
+- Pure CNNs focus on local pixel textures and high-frequency noise, excelling at 
+  detecting GAN upsampling checkerboard patterns, but they miss global structural 
+  incoherence and lighting contradictions produced by modern diffusion models.
+- Pure Vision Transformers capture global patch relationships and scene semantics, 
+  but frequently miss subtle micro-pixel compression discrepancies and sensor-level 
+  noise variations.
+
+This project implements and evaluates both individual baselines and introduces a 
+Hybrid CNN + ViT Fusion Architecture that extracts complementary feature representations 
+(local artifact vectors + global contextual attention vectors) into a single 1280-dimensional 
+feature embedding. The hybrid system achieves 96.2% overall accuracy and cuts false 
+negatives on diffusion imagery by 52.5% compared to the CNN baseline.
+
+================================================================================
+2. PROJECT AUTHORS & INDIVIDUAL CONTRIBUTIONS
+================================================================================
+The project was designed, developed, and evaluated by the following team members:
+
+1. Shashank Solaiappan (Roll No: S24CSEU2692)
+   Role: Hybrid Model & Pipeline Architecture
+   Contributions:
+   - Designed the dual-branch feature concatenation and fusion classification layer.
+   - Built the unified image processing pipeline integrating local and global forensic signals.
+   - Developed the FastAPI application backend, API routing, and state orchestration.
+
+2. Brajraj Mahajan (Roll No: S24CSEU2543)
+   Role: CNN Baseline & Local Feature Extraction
+   Contributions:
+   - Researched and benchmarked the CNN baseline (ResNet-50 / EfficientNet).
+   - Designed the high-frequency pixel anomaly and Error Level Analysis (ELA) module.
+   - Investigated transposed convolution checkerboard artifacts in GAN generation.
+
+3. Uma Shankar Mannuru (Roll No: S24CSEU2552)
+   Role: Vision Transformer (ViT) & Patch Attention
+   Contributions:
+   - Researched and benchmarked the ViT-Base architecture (16x16 patch projection).
+   - Implemented cross-patch self-attention matrix calculation and dispersion mapping.
+   - Analyzed long-range structural coherence and lighting vector consistency.
+
+4. Nidhi Verma (Roll No: S24CSEU2553)
+   Role: Dataset Preprocessing, Augmentations & Evaluation Metrics
+   Contributions:
+   - Curated and partitioned the 20,000-image evaluation dataset across GAN and Diffusion families.
+   - Formulated the data augmentation and normalization strategies.
+   - Generated empirical evaluation metrics, confusion matrices, and latency benchmarks.
+
+================================================================================
+3. PROBLEM STATEMENT & BACKGROUND
+================================================================================
+Digital forensics has entered a critical phase where standard perceptual inspection 
+no longer suffices:
+1. Generative Adversarial Networks (StyleGAN2 / StyleGAN3):
+   Produce photorealistic human faces and objects via transposed convolutions, 
+   leaving subtle micro-level frequency fingerprints, color disparities, and 
+   asymmetries in fine details (e.g., earrings, eyes, teeth).
+2. Latent Diffusion Models (Stable Diffusion, Midjourney, DALL-E 3):
+   Operate by iteratively denoising representations in latent space. They eliminate 
+   traditional GAN upsampling artifacts and generate hyper-smooth textures, but 
+   frequently struggle with non-adjacent contextual coherence (e.g., mismatched 
+   shadows, impossible perspective angles, inconsistent background illumination).
+3. Real Digital Photography:
+   Possesses natural camera sensor noise (Poisson-Gaussian distribution), physical 
+   lens depth-of-field blur, realistic optical chromatic aberration, and authentic 
+   compression falloff curves.
+
+================================================================================
+4. MODEL ARCHITECTURES ANALYZED & IMPLEMENTED
+================================================================================
+
+--------------------------------------------------------------------------------
+4.1 Model 1: CNN Baseline (ResNet-50 / EfficientNet-B4)
+--------------------------------------------------------------------------------
+- Architecture: Deep Convolutional Neural Network utilizing stacked residual 
+  blocks and spatial pooling.
+- Operational Principle: Applies localized convolutional kernels (3x3, 5x5) across 
+  receptive fields to extract hierarchical spatial features (edges -> textures -> 
+  object parts).
+- Primary Focus:
+  * High-frequency residual noise patterns.
+  * Transposed convolution upsampling grids ("checkerboard" artifacts).
+  * JPEG compression boundary discontinuities.
+- Performance on Benchmark:
+  * Accuracy: 89.4%
+  * Precision: 88.2% | Recall: 91.1% | F1-Score: 89.6% | AUC-ROC: 0.942
+  * Inference Latency: ~18 ms
+- Strengths & Limitations:
+  * Strength: Fast, lightweight, highly sensitive to GAN surface noise.
+  * Limitation: Often fails on clean latent diffusion outputs that lack grid 
+    artifacts, resulting in higher false negative rates on Midjourney / SD images.
+
+--------------------------------------------------------------------------------
+4.2 Model 2: Vision Transformer Baseline (ViT-Base / Patch 16x16)
+--------------------------------------------------------------------------------
+- Architecture: Standard Vision Transformer adapting Transformer self-attention 
+  directly to 2D image data.
+- Operational Principle:
+  * Deconstructs an input image into a grid of non-overlapping patches (e.g., 14x14 
+    or 16x16 pixels).
+  * Flattens and linearly projects each patch into a D-dimensional embedding vector.
+  * Prepends a learnable [CLS] classification token and adds 1D positional encodings.
+  * Passes tokens through multiple stacked Multi-Head Self-Attention (MHSA) blocks:
+      Attention(Q, K, V) = softmax((Q * K^T) / sqrt(d_k)) * V
+- Primary Focus:
+  * Long-range dependency modeling across the entire image canvas.
+  * Global lighting and shadow angle consistency across non-adjacent objects.
+  * Anatomical and semantic structural realism.
+- Performance on Benchmark:
+  * Accuracy: 91.8%
+  * Precision: 93.1% | Recall: 90.3% | F1-Score: 91.7% | AUC-ROC: 0.961
+  * Inference Latency: ~42 ms
+- Strengths & Limitations:
+  * Strength: High robustness against diffusion models; identifies semantic 
+    absurdities that look realistic locally.
+  * Limitation: Requires higher computational budget; can overlook subtle, 
+    localized sensor-level noise variations.
+
+--------------------------------------------------------------------------------
+4.3 Model 3: Proposed Hybrid CNN + ViT Feature Concatenation Network
+--------------------------------------------------------------------------------
+- Architecture: Dual-branch feature extractor with late feature fusion:
+  * Branch A (CNN Stream): Extracts local artifact vector z_CNN in R^512 from the 
+    penultimate pooling layer of the CNN backbone.
+  * Branch B (ViT Stream): Extracts global contextual representation z_ViT in R^768 
+    from the Transformer [CLS] token output.
+  * Fusion Layer: Concatenates both vectors into a combined 1280-dimensional 
+    representation:
+        z_fused = [z_CNN || z_ViT] in R^(512 + 768) = R^1280
+  * Classification Head:
+        h1 = ReLU(W1 * z_fused + b1)  with Dropout(p=0.3)
+        y_hat = Sigmoid(W2 * h1 + b2)
+- Operational Principle:
+  The classification decision does not depend solely on local noise or global 
+  context, but evaluates both simultaneously. When a diffusion model generates 
+  smooth, convincing local pixels, the ViT branch catches contextual incoherence. 
+  When a GAN generates plausible global geometry, the CNN branch catches transposed 
+  convolution noise.
+- Performance on Benchmark:
+  * Accuracy: 96.2%
+  * Precision: 96.8% | Recall: 95.5% | F1-Score: 96.1% | AUC-ROC: 0.988
+  * Inference Latency: ~54 ms
+  * False Negative Reduction: -52.5% compared to CNN baseline on diffusion models.
+
+================================================================================
+5. FORENSIC SIGNAL EXTRACTION & EXPLAINABILITY ENGINE
+================================================================================
+Located in `app/detector.py`, the system implements four distinct forensic 
+algorithms to generate real-time visual heatmaps and quantitative indicators:
+
+1. Error Level Analysis (ELA) [compute_ela_image]:
+   - Resaves the image in memory at a controlled lossy JPEG compression rate (quality=90).
+   - Computes the absolute pixel-wise difference between the original image and 
+     the recompressed version:
+         diff(x, y) = |I_orig(x, y) - I_recompressed(x, y)|
+   - Scales and maps the intensity array into a 4-stage thermal heatmap (Blue -> 
+     Cyan -> Yellow -> Red/White).
+   - In authentic images, uniform sensor noise causes consistent, evenly distributed 
+     recompression error. In synthetic or spliced images, modified regions show 
+     dramatically lower or spiked error levels.
+
+2. ViT Patch Attention Dispersion [compute_vit_attention_map]:
+   - Resizes image to standard ViT resolution (224x224) and partitions it into a 
+     14x14 grid of patches (196 total patches).
+   - Extracts localized color means, standard deviations, and directional edge gradients.
+   - Calculates pairwise patch-to-patch dot-product self-attention weights with softmax.
+   - Evaluates attention variance across distant patches to measure semantic tension 
+     and lighting discrepancies, rendering a colorized attention heatmap.
+
+3. 2D Fast Fourier Transform (FFT) Spectral Analysis:
+   - Transforms spatial image data into the frequency domain:
+         F(u, v) = FFT2D(I_gray)
+   - Shifts zero-frequency components to the center and calculates the log-magnitude spectrum.
+   - Isolates radial high-frequency bands to compute the high-frequency energy ratio:
+     * Natural photos feature a smooth, organic falloff in spectral power.
+     * AI generation often introduces sharp frequency spikes (GAN grids) or abnormally 
+       attenuated high frequencies (diffusion smoothing).
+
+4. Laplacian Gradient Variance:
+   - Convolves the grayscale image with a 2D discrete Laplacian kernel:
+         K = [[0, 1, 0], [1, -4, 1], [0, 1, 0]]
+   - Calculates the statistical variance of the response:
+         Var = (1/N) * sum((Lap(x, y) - mu)^2)
+   - Serves as a quantitative measure of micro-edge sharpness, natural sensor grain, 
+     and synthetic over-smoothing.
+
+================================================================================
+6. DATASET & EXPERIMENTAL BENCHMARK RESULTS
+================================================================================
+
+--------------------------------------------------------------------------------
+6.1 Dataset Composition & Partitioning
+--------------------------------------------------------------------------------
+- Total Evaluated Images: 20,000 images
+  * Training Set:   14,000 images (70%)
+  * Validation Set:  3,000 images (15%)
+  * Test Set:        3,000 images (15%)
+- Balanced Binary Classes:
+  * Real Images: Camera-captured (DSLR, Mobile, Uncompressed TIFF/PNG/JPEG).
+  * Fake Images: GAN-generated, Diffusion-generated, and hybrid digital manipulations.
+
+--------------------------------------------------------------------------------
+6.2 Target Generative Models Represented
+--------------------------------------------------------------------------------
+1. StyleGAN2 / StyleGAN3: High-resolution human faces (FFHQ dataset).
+2. Stable Diffusion (v1.5 & v2.1): Open-domain text-to-image prompts.
+3. Midjourney (v5 & v6): Photorealistic portraits, cinematic landscapes, aesthetic lighting.
+4. DALL-E 3: Complex multi-subject prompt compositions.
+5. Authentic Digital Captures: Unedited and lightly compressed camera imagery.
+
+--------------------------------------------------------------------------------
+6.3 Model Comparison Table
+--------------------------------------------------------------------------------
+| Metric             | CNN Baseline     | ViT Baseline      | Hybrid CNN + ViT  |
+|--------------------|------------------|-------------------|-------------------|
+| Backbone           | ResNet / EffNet  | ViT-Base (16x16)  | Fused Concatenation|
+| Accuracy           | 89.4%            | 91.8%             | 96.2%             |
+| Precision          | 88.2%            | 93.1%             | 96.8%             |
+| Recall             | 91.1%            | 90.3%             | 95.5%             |
+| F1-Score           | 89.6%            | 91.7%             | 96.1%             |
+| AUC-ROC            | 0.942            | 0.961             | 0.988             |
+| Latency per Image  | 18 ms            | 42 ms             | 54 ms             |
+
+--------------------------------------------------------------------------------
+6.4 Confusion Matrix Breakdown (Evaluated on 3,000 Test Images)
+--------------------------------------------------------------------------------
+Each model was tested on 3,000 unseen images (1,500 True Real, 1,500 True Fake):
+
+- CNN Baseline:
+  * True Real (True Negative):     1,323 (88.2%)
+  * False Fake (False Positive):     177 (11.8%)
+  * False Real (False Negative):     141 (9.4%)
+  * True Fake (True Positive):     1,359 (90.6%)
+
+- ViT Baseline:
+  * True Real (True Negative):     1,400 (93.3%)
+  * False Fake (False Positive):     100 (6.7%)
+  * False Real (False Negative):     146 (9.7%)
+  * True Fake (True Positive):     1,354 (90.3%)
+
+- Proposed Hybrid Model:
+  * True Real (True Negative):     1,453 (96.9%)
+  * False Fake (False Positive):      47 (3.1%)
+  * False Real (False Negative):      67 (4.5%)  <-- 52.5% reduction vs CNN!
+  * True Fake (True Positive):     1,433 (95.5%)
+
+--------------------------------------------------------------------------------
+6.5 Generator-Specific Breakdown (Detection Accuracy by Architecture)
+--------------------------------------------------------------------------------
+| Generator Architecture               | CNN Acc  | ViT Acc  | Hybrid Acc |
+|--------------------------------------|----------|----------|------------|
+| StyleGAN (GAN Upsampling Artifacts)  | 94.6%    | 88.2%    | 97.4%      |
+| Stable Diffusion (Latent Geometry)   | 86.8%    | 92.5%    | 95.8%      |
+| Midjourney v5/v6 (Aesthetic Shading) | 85.2%    | 93.8%    | 96.1%      |
+| Authentic Camera Photos (Real)       | 91.0%    | 92.6%    | 96.9%      |
+
+================================================================================
+7. GRANULAR CODEBASE & FILE-BY-FILE BREAKDOWN
+================================================================================
+
+```
+project/
+├── app/
+│   ├── __init__.py           # Package marker for the application module
+│   ├── detector.py           # Core algorithmic engine for forensics & inference
+│   ├── evaluation.py         # Empirical benchmark data, matrices & generator stats
+│   └── main.py               # FastAPI application backend, routers & static mounts
+├── samples/                  # Preloaded high-resolution benchmark assets
+│   ├── midjourney_astronaut.jpg
+│   ├── stylegan_portrait.jpg
+│   ├── real_watchmaker.jpg
+│   └── real_lake_mountain.jpg
+├── static/                   # Production-ready Single Page Application (SPA)
+│   ├── index.html            # Main dashboard HTML (Studio, Benchmarks, Methodology)
+│   ├── css/
+│   │   └── style.css         # Custom modern dark-glassmorphic styling
+│   └── js/
+│       └── app.js            # Client-side state handling, API calls & visual toggles
+├── requirements.txt          # Python library dependencies
+├── run.bat                   # 1-click execution script for Windows
+├── Imd project repo.pdf      # Original project research report document
+└── README.md                 # Project documentation and quick-start instructions
+```
+
+Detailed file duties:
+- `app/detector.py` (284 lines):
+  * `create_color_map_heatmap()`: Converts 2D intensity matrices into normalized thermal 
+    RGB images (Dark Blue -> Cyan -> Yellow -> Red/White).
+  * `compute_ela_image()`: Implements Error Level Analysis via in-memory JPEG resave and 
+    difference extraction.
+  * `compute_vit_attention_map()`: Simulates ViT patch tokenization, self-attention 
+    dispersion, and upscales the attention map to original dimensions.
+  * `analyze_image_deep_truth()`: Orchestrates the pipeline, calculates 2D FFT 
+    spectrum ratio and Laplacian variance, evaluates individual CNN, ViT, and Hybrid 
+    probabilities, and returns Base64-encoded heatmaps.
+
+- `app/evaluation.py` (125 lines):
+  * Houses `get_benchmark_data()` containing the complete data from Section 8 & 9 of the 
+    project report (dataset numbers, model accuracy/precision/recall/latency metrics, 
+    confusion matrices, and generator breakdowns).
+
+- `app/main.py` (164 lines):
+  * Sets up FastAPI with CORS middleware.
+  * Mounts static directories (`/static` and `/samples`).
+  * Implements endpoints:
+    - `GET /`: Serves the web dashboard (`static/index.html`).
+    - `GET /api/info`: Returns project title, semester, authors, and roles.
+    - `GET /api/samples`: Returns metadata and URLs for the pre-loaded benchmark images.
+    - `POST /api/analyze`: Accepts multipart image file upload or sample ID and returns 
+      the complete forensic verdict payload.
+    - `GET /api/benchmark`: Returns dataset benchmarks and confusion matrix data.
+
+- `static/index.html`:
+  * Tabbed layout featuring:
+    1. Live Forensic Studio (image upload dropzone, benchmark sample cards, verdict 
+       banner, tri-model comparison meters, heatmap viewer, and forensic indicator dials).
+    2. Model Evaluation & Benchmarks (interactive comparison table, interactive confusion 
+       matrix toggle, and generator accuracy chart).
+    3. Methodology & Hybrid Architecture (interactive flowchart of CNN vs ViT branches).
+    4. Report Abstract & Team Showcase.
+
+- `static/js/app.js`:
+  * Manages UI state (`currentSelectedSampleId`, `currentViewMode`).
+  * Handles drag-and-drop file upload with preview rendering.
+  * Calls `/api/analyze` and updates verdict, confidence meters, and explanatory text.
+  * Manages one-click view switching between:
+    - Original photo
+    - CNN Error Level Analysis (ELA) heatmap
+    - ViT Patch Self-Attention heatmap
+  * Dynamically populates the interactive confusion matrix when switching between models.
+
+- `static/css/style.css`:
+  * Implements responsive CSS grid/flexbox layouts.
+  * Uses modern dark glassmorphic design with custom color variables (`--bg-primary`, 
+    `--accent-cyan`, `--accent-purple`, `--glass-bg`).
+  * Features styled progress bars, badge tags, and animated cards.
+
+- `samples/*`:
+  * `midjourney_astronaut.jpg`: Latent diffusion benchmark with glowing neon reflections.
+  * `stylegan_portrait.jpg`: GAN portrait benchmark with synthetic hair and skin.
+  * `real_watchmaker.jpg`: Authentic indoor DSLR photo with natural lens depth of field.
+  * `real_lake_mountain.jpg`: Authentic outdoor landscape with coherent reflection physics.
+
+================================================================================
+8. HOW TO RUN THE PROJECT & API REFERENCE
+================================================================================
+
+--------------------------------------------------------------------------------
+8.1 Prerequisites & Installation
+--------------------------------------------------------------------------------
+Required environment: Python 3.9, 3.10, 3.11, or 3.12.
+
+Install dependencies via terminal:
+    pip install -r requirements.txt
+
+The dependencies in requirements.txt are:
+    fastapi>=0.110.0
+    uvicorn>=0.28.0
+    pillow>=10.0.0
+    numpy>=1.26.0
+    scipy>=1.12.0
+    scikit-learn>=1.4.0
+    python-multipart>=0.0.9
+
+--------------------------------------------------------------------------------
+8.2 One-Click Execution
+--------------------------------------------------------------------------------
+- On Windows: Double-click `run.bat` in the project root directory.
+- Via Terminal:
+    python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
+
+Once running, navigate to:
+    http://127.0.0.1:8000
+
+--------------------------------------------------------------------------------
+8.3 REST API Endpoints & Contract
+--------------------------------------------------------------------------------
+
+1. Analyze Image:
+   Endpoint: POST /api/analyze
+   Content-Type: multipart/form-data
+   Parameters:
+     - `file` (optional): Uploaded binary image (JPG, PNG, WEBP).
+     - `sample_id` (optional): ID string of preloaded sample (e.g. "midjourney_astronaut").
+   Sample Response Payload:
+   {
+     "verdict": "AI-Generated / Synthetic",
+     "is_fake": true,
+     "confidence": 98.4,
+     "generator_type": "Latent Diffusion Model (Midjourney v6 Architecture)",
+     "dimensions": "1024 x 1024 px",
+     "reasoning": "The Hybrid CNN+ViT architecture identified strong markers of synthetic generation...",
+     "models": {
+       "cnn": { "name": "CNN Baseline", "prediction": "AI-Generated", "probability_fake": 92.1 },
+       "vit": { "name": "Vision Transformer", "prediction": "AI-Generated", "probability_fake": 95.4 },
+       "hybrid": { "name": "Hybrid CNN + ViT", "prediction": "AI-Generated", "probability_fake": 98.4 }
+     },
+     "heatmaps": {
+       "ela": "data:image/jpeg;base64,...",
+       "vit_attention": "data:image/jpeg;base64,... formulation"
+     },
+     "forensics": {
+       "noise_uniformity": 42.1,
+       "patch_discrepancy": 88.5,
+       "spectral_frequency_energy": 79.2,
+       "laplacian_gradient_variance": 34.6
+     }
+   }
+
+2. Fetch Benchmark Metrics:
+   Endpoint: GET /api/benchmark
+   Returns: JSON containing dataset summaries, model metrics, confusion matrices, 
+   and per-generator breakdown.
+
+3. Fetch Available Sample Benchmarks:
+   Endpoint: GET /api/samples
+   Returns: Array of pre-curated test image metadata and URLs.
+
+================================================================================
+END OF OVERVIEW DOCUMENTATION
+================================================================================

@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DeepTruth — Forensic AI Face Verification System</title>
+  <meta name="description" content="AI System for Detecting Fake / AI-Generated Images using ViT-Guided CNN with spatial attention gating and frequency analysis.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛡️</text></svg>">
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+
+  <!-- App Header -->
+  <header class="app-header">
+    <div class="container header-inner">
+      <div class="brand-wrapper">
+        <div class="brand-icon">DT</div>
+        <div class="brand-title">
+          <h1>DeepTruth <span class="highlight-tag">v2.0 Model</span></h1>
+          <p>Forensic Real vs. AI-Generated Image Detector</p>
+        </div>
+      </div>
+      <div class="header-badges">
+        <span class="badge badge-gpu">NVIDIA RTX 5060 (bf16)</span>
+        <span class="badge badge-bu">Bennett University &bull; Sem 5 IMD</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="container">
+
+    <!-- Navigation Tabs -->
+    <nav class="nav-tabs">
+      <button class="nav-tab-btn active" id="tab-btn-studio" onclick="switchTab('studio')">
+        Forensic Studio
+      </button>
+      <button class="nav-tab-btn" id="tab-btn-benchmark" onclick="switchTab('benchmark')">
+        Evaluation & Benchmarks
+      </button>
+      <button class="nav-tab-btn" id="tab-btn-methodology" onclick="switchTab('methodology')">
+        Architecture & Methodology
+      </button>
+      <button class="nav-tab-btn" id="tab-btn-report" onclick="switchTab('report')">
+        Project Report & Authors
+      </button>
+    </nav>
+
+    <!-- TAB 1: LIVE FORENSIC STUDIO -->
+    <section id="tab-studio" class="tab-content active">
+      
+      <!-- Preset Showcase -->
+      <div class="hero-box">
+        <div class="hero-box-header">
+          <h2>Test Bench — Curated Evaluation Samples</h2>
+          <span style="font-size: 12px; color: var(--text-secondary);">Select a benchmark face image or upload your own</span>
+        </div>
+        <div class="sample-grid" id="sample-grid">
+          <!-- Dynamically populated -->
+        </div>
+
+        <!-- Custom Upload & Active Selection Row -->
+        <div class="dropzone-container">
+          <!-- Drag & Drop Area -->
+          <div class="dropzone" id="dropzone" onclick="document.getElementById('file-input').click()">
+            <input type="file" id="file-input" class="file-input" accept="image/*" onchange="handleFileSelect(event)">
+            <div class="dropzone-icon">📁</div>
+            <h3>Upload Image to Analyze</h3>
+            <p>Drag & drop or browse image file (JPEG, PNG, WEBP). Native 224x224 crop applied.</p>
+          </div>
+
+          <!-- Preview & Action Card -->
+          <div class="preview-card" id="preview-card">
+            <div class="preview-header">
+              <h3 id="current-image-name">Selected: StyleGAN Fashion Portrait</h3>
+              <span id="current-image-tag" class="badge">Preset</span>
+            </div>
+            <div class="preview-media-box">
+              <img id="active-preview-img" src="/samples/stylegan_portrait.jpg" alt="Selected Preview">
+            </div>
+            <button class="btn-analyze" id="btn-analyze" onclick="runAnalysis()">
+              <span id="btn-analyze-text">Run ViT-Guided CNN Inspection</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Analysis Results Container -->
+      <div class="results-container" id="results-container">
+        
+        <!-- Out-of-Domain / Domain Warning Alert -->
+        <div class="domain-warning-banner" id="domain-warning-banner" style="display: none;">
+          <strong>Domain Notice:</strong> <span id="domain-warning-text"></span>
+        </div>
+
+        <!-- Verdict Banner -->
+        <div class="verdict-banner is-fake" id="verdict-banner">
+          <div class="verdict-left">
+            <div class="verdict-icon" id="verdict-icon">⚠️</div>
+            <div class="verdict-title-box">
+              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 2px;">
+                <h3 id="verdict-title" style="margin: 0;">AI-Generated / Synthetic</h3>
+                <span id="verdict-model-source" class="badge" style="background: rgba(37, 99, 235, 0.15); color: var(--accent-blue-light); border-color: rgba(59, 130, 246, 0.4); font-size: 11px;">Trained Checkpoint</span>
+              </div>
+              <div class="verdict-subtitle" id="verdict-subtitle">Estimated Footprint: StyleGAN Generative Architecture</div>
+            </div>
+          </div>
+          <div class="verdict-stats">
+            <div class="stat-pill">
+              <div class="stat-label">Model Confidence</div>
+              <div class="stat-val" id="verdict-confidence" style="color: var(--accent-rose-light);">96.8%</div>
+            </div>
+            <div class="stat-pill">
+              <div class="stat-label">Inference Latency</div>
+              <div class="stat-val" id="verdict-latency" style="font-size: 18px; color: var(--accent-blue-light); font-family: var(--font-mono);">-- ms</div>
+            </div>
+            <div class="stat-pill">
+              <div class="stat-label">Resolution</div>
+              <div class="stat-val" id="verdict-dimensions" style="font-size: 18px; color: var(--text-tertiary);">256 × 256</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tri-Model Comparison Grid -->
+        <div class="model-comparison-grid">
+          <!-- CNN Baseline -->
+          <div class="model-card" id="model-card-cnn">
+            <div class="model-card-header">
+              <div class="model-card-title">1. CNN Baseline</div>
+              <span class="model-badge badge-baseline">EfficientNet-B0</span>
+            </div>
+            <div class="model-score-row">
+              <span class="model-score-val" id="cnn-score-val" style="color: var(--accent-rose-light);">--%</span>
+              <span id="cnn-pred-badge" class="badge" style="border-color: rgba(225, 29, 72, 0.4); color: var(--accent-rose-light);">AI-Generated</span>
+            </div>
+            <div class="progress-bar-wrap">
+              <div class="progress-bar-fill" id="cnn-score-bar" style="width: 50%; background: var(--accent-rose);"></div>
+            </div>
+            <p class="model-card-desc">Evaluates local pixel artifacts, high-frequency residual traces, and convolution upsampling patterns.</p>
+          </div>
+
+          <!-- Vision Transformer Baseline -->
+          <div class="model-card" id="model-card-vit">
+            <div class="model-card-header">
+              <div class="model-card-title">2. Vision Transformer</div>
+              <span class="model-badge badge-baseline">ViT-S/14 DINOv2</span>
+            </div>
+            <div class="model-score-row">
+              <span class="model-score-val" id="vit-score-val" style="color: var(--accent-rose-light);">--%</span>
+              <span id="vit-pred-badge" class="badge" style="border-color: rgba(225, 29, 72, 0.4); color: var(--accent-rose-light);">AI-Generated</span>
+            </div>
+            <div class="progress-bar-wrap">
+              <div class="progress-bar-fill" id="vit-score-bar" style="width: 50%; background: var(--accent-amber);"></div>
+            </div>
+            <p class="model-card-desc">Processes 16×16 non-overlapping image patches to detect global structural inconsistencies and semantic anomalies.</p>
+          </div>
+
+          <!-- ViT-Guided CNN -->
+          <div class="model-card hybrid-card" id="model-card-hybrid">
+            <div class="model-card-header">
+              <div class="model-card-title">3. ViT-Guided CNN</div>
+              <span class="model-badge badge-featured">Proposed Architecture</span>
+            </div>
+            <div class="model-score-row">
+              <span class="model-score-val" id="hybrid-score-val" style="color: var(--accent-blue-light);">--%</span>
+              <span id="hybrid-pred-badge" class="badge" style="border-color: rgba(59, 130, 246, 0.5); color: var(--accent-blue-light); background: rgba(37, 99, 235, 0.1);">Verified</span>
+            </div>
+            <div class="progress-bar-wrap">
+              <div class="progress-bar-fill" id="hybrid-score-bar" style="width: 50%; background: var(--accent-primary);"></div>
+            </div>
+            <p class="model-card-desc">Injects ViT attention rollout as spatial guidance gating and FiLM channel modulation into CNN stages with cross-attention fusion.</p>
+          </div>
+        </div>
+
+        <!-- Forensic Visualizer -->
+        <div class="visualizer-card">
+          <div class="visualizer-header">
+            <div>
+              <h3>Forensic Heatmap & Spectral Inspection</h3>
+              <p>Examine localized spatial attributions and 2D frequency spectra</p>
+            </div>
+            <div class="visualizer-tabs">
+              <button class="vis-tab-btn active" id="btn-view-orig" onclick="setViewMode('orig')">Original</button>
+              <button class="vis-tab-btn" id="btn-view-ela" onclick="setViewMode('ela')">Error Level (ELA)</button>
+              <button class="vis-tab-btn" id="btn-view-vit" onclick="setViewMode('vit')">ViT Attention</button>
+              <button class="vis-tab-btn" id="btn-view-gradcam" onclick="setViewMode('gradcam')">CNN Grad-CAM</button>
+              <button class="vis-tab-btn" id="btn-view-fft" onclick="setViewMode('fft')">2D FFT Spectrum</button>
+            </div>
+          </div>
+
+          <div class="visualizer-viewport">
+            <img id="viewport-img" class="viewport-image" src="/samples/stylegan_portrait.jpg" alt="Forensic Viewport">
+          </div>
+
+          <div class="viewport-legend">
+            <span id="view-caption">Viewing: Original input image</span>
+            <div class="legend-scale" id="legend-scale-box" style="display: none;">
+              <span>Low Activation</span>
+              <div class="gradient-scale-bar"></div>
+              <span>Peak Activation</span>
+            </div>
+          </div>
+
+          <!-- Forensic Indicators -->
+          <div class="forensic-metrics-grid">
+            <div class="indicator-card">
+              <div class="indicator-title">
+                <span>Noise Uniformity</span>
+                <span>Residual</span>
+              </div>
+              <div class="indicator-value" id="val-noise-uni">--%</div>
+              <div class="progress-bar-wrap">
+                <div class="progress-bar-fill" id="bar-noise-uni" style="width: 0%; background: var(--accent-primary);"></div>
+              </div>
+            </div>
+
+            <div class="indicator-card">
+              <div class="indicator-title">
+                <span>Patch Divergence</span>
+                <span>Context</span>
+              </div>
+              <div class="indicator-value" id="val-patch-div">--%</div>
+              <div class="progress-bar-wrap">
+                <div class="progress-bar-fill" id="bar-patch-div" style="width: 0%; background: var(--accent-amber);"></div>
+              </div>
+            </div>
+
+            <div class="indicator-card">
+              <div class="indicator-title">
+                <span>Spectral Energy</span>
+                <span>High-Freq</span>
+              </div>
+              <div class="indicator-value" id="val-spectral-energy">--%</div>
+              <div class="progress-bar-wrap">
+                <div class="progress-bar-fill" id="bar-spectral-energy" style="width: 0%; background: var(--accent-teal);"></div>
+              </div>
+            </div>
+
+            <div class="indicator-card">
+              <div class="indicator-title">
+                <span>Texture Variance</span>
+                <span>Laplacian</span>
+              </div>
+              <div class="indicator-value" id="val-grad-var">--%</div>
+              <div class="progress-bar-wrap">
+                <div class="progress-bar-fill" id="bar-grad-var" style="width: 0%; background: var(--accent-rose);"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Explainability Summary Box -->
+          <div class="reasoning-box">
+            <div class="reasoning-icon">ℹ️</div>
+            <div class="reasoning-text">
+              <h4>Forensic Finding</h4>
+              <p id="analysis-reasoning-text">Awaiting model inference...</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- TAB 2: MODEL EVALUATION & BENCHMARKS -->
+    <section id="tab-benchmark" class="tab-content">
+      
+      <!-- Highlights Row -->
+      <div class="model-comparison-grid" style="margin-bottom: 24px;">
+        <div class="model-card">
+          <div style="font-size: 11.5px; color: var(--text-tertiary); text-transform: uppercase;">Guided Model Accuracy</div>
+          <div style="font-size: 28px; font-weight: 700; color: var(--accent-emerald-light); font-family: var(--font-mono); margin: 4px 0;">88.5%</div>
+          <div style="font-size: 12px; color: var(--text-secondary);">Measured on 20,000 held-out test faces</div>
+        </div>
+        <div class="model-card">
+          <div style="font-size: 11.5px; color: var(--text-tertiary); text-transform: uppercase;">Area Under Curve (AUC-ROC)</div>
+          <div style="font-size: 28px; font-weight: 700; color: var(--accent-blue-light); font-family: var(--font-mono); margin: 4px 0;">0.9560</div>
+          <div style="font-size: 12px; color: var(--text-secondary);">Strong separation across FFHQ vs StyleGAN</div>
+        </div>
+        <div class="model-card">
+          <div style="font-size: 11.5px; color: var(--text-tertiary); text-transform: uppercase;">Inference Latency (GPU)</div>
+          <div style="font-size: 28px; font-weight: 700; color: var(--text-primary); font-family: var(--font-mono); margin: 4px 0;">25.1 ms</div>
+          <div style="font-size: 12px; color: var(--text-secondary);">Real-time inspection on RTX 5060 (sm_120)</div>
+        </div>
+      </div>
+
+      <div class="benchmark-grid">
+        
+        <!-- Model Comparison Table -->
+        <div class="card-benchmark" style="grid-column: span 2;">
+          <h3 class="card-title">Empirical Benchmark Evaluation (Held-Out Test Split)</h3>
+          <div style="overflow-x: auto;">
+            <table class="data-table" id="table-model-comparison">
+              <thead>
+                <tr>
+                  <th>Model Architecture</th>
+                  <th>Backbone</th>
+                  <th>Accuracy</th>
+                  <th>Precision</th>
+                  <th>Recall</th>
+                  <th>F1-Score</th>
+                  <th>AUC-ROC</th>
+                  <th>Latency</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-comparison">
+                <!-- Dynamically loaded from reports/results.json -->
+              </tbody>
+            </table>
+          </div>
+          <p style="font-size: 11.5px; color: var(--text-tertiary); margin-top: 14px;">
+            * Evaluated on the 20,000-image test split of Hugging Face <code>TheKernel01/140k-Real-and-Fake-Faces</code>. Thresholds calibrated exclusively on validation set.
+          </p>
+        </div>
+
+        <!-- Interactive Confusion Matrix -->
+        <div class="card-benchmark">
+          <h3 class="card-title">Test Confusion Matrix</h3>
+          <div class="cm-switch-wrap">
+            <button class="cm-btn" onclick="selectConfusionMatrix('cnn', this)">CNN</button>
+            <button class="cm-btn" onclick="selectConfusionMatrix('vit', this)">ViT</button>
+            <button class="cm-btn active" onclick="selectConfusionMatrix('guided', this)">ViT-Guided</button>
+          </div>
+
+          <div class="cm-grid-2x2">
+            <div></div>
+            <div class="cm-header-cell">Pred: Real</div>
+            <div class="cm-header-cell">Pred: Fake</div>
+
+            <div class="cm-header-cell">Actual: Real</div>
+            <div class="cm-cell cm-correct">
+              <span class="cm-val" id="cm-tn">8,779</span>
+              <span class="cm-label">True Real (TN)</span>
+            </div>
+            <div class="cm-cell cm-error">
+              <span class="cm-val" id="cm-fp">1,221</span>
+              <span class="cm-label">False Fake (FP)</span>
+            </div>
+
+            <div class="cm-header-cell">Actual: Fake</div>
+            <div class="cm-cell cm-error">
+              <span class="cm-val" id="cm-fn">1,085</span>
+              <span class="cm-label">False Real (FN)</span>
+            </div>
+            <div class="cm-cell cm-correct">
+              <span class="cm-val" id="cm-tp">8,915</span>
+              <span class="cm-label">True Fake (TP)</span>
+            </div>
+          </div>
+
+          <div style="margin-top: 16px; font-size: 12px; color: var(--text-secondary);">
+            <strong id="cm-active-name" style="color: #fff;">ViT-Guided CNN</strong> accurately classifies 17,694 out of 20,000 test images.
+          </div>
+        </div>
+
+        <!-- Robustness Breakdown -->
+        <div class="card-benchmark" style="grid-column: span 2;">
+          <h3 class="card-title">Corruption & Perturbation Robustness Benchmarks</h3>
+          <div style="overflow-x: auto;">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Perturbation / Condition</th>
+                  <th>CNN Baseline Acc.</th>
+                  <th>ViT Baseline Acc.</th>
+                  <th>ViT-Guided Acc.</th>
+                  <th>Operational Implication</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-generator">
+                <!-- Dynamically populated from reports/results.json -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- TAB 3: METHODOLOGY & ARCHITECTURE -->
+    <section id="tab-methodology" class="tab-content">
+      
+      <div class="hero-box">
+        <h2 style="font-size: 16px; margin-bottom: 6px;">Proposed ViT-Guided CNN Architecture</h2>
+        <p style="font-size: 13px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 20px;">
+          Rather than naively concatenating dense embeddings, the ViT-Guided CNN uses Vision Transformer attention rollout to spatially guide convolutional feature extraction, combined with FiLM channel modulation and cross-attention fusion.
+        </p>
+
+        <div class="arch-flow-diagram">
+          
+          <div class="arch-node" style="text-align: center; border-color: rgba(37, 99, 235, 0.3);">
+            <h4 style="color: var(--accent-blue-light);">1. Preprocessing Stage (Native 224×224 Crop)</h4>
+            <p>Native-resolution center/random crop from 256×256 without resampling to preserve high-frequency artifacts. Feed identical tensors to both branches.</p>
+          </div>
+
+          <div class="arch-connector">&darr; Dual-Branch Feature Extraction &darr;</div>
+
+          <div class="arch-parallel-group">
+            <div class="arch-node" style="border-color: rgba(225, 29, 72, 0.3);">
+              <h4 style="color: var(--accent-rose-light);">CNN Branch: EfficientNet-B0</h4>
+              <p style="margin-bottom: 6px;"><strong>Role:</strong> Captures localized pixel-level texture irregularities, noise residuals, and upsampling artifacts.</p>
+              <p><strong>Modification:</strong> Features modulated by ViT spatial gating <code>F' = F * (1 + &sigma;(conv(A)))</code> and FiLM affine parameters (&gamma;, &beta;).</p>
+            </div>
+
+            <div class="arch-node" style="border-color: rgba(217, 119, 6, 0.3);">
+              <h4 style="color: var(--accent-amber-light);">ViT Branch: DINOv2 ViT-S/14</h4>
+              <p style="margin-bottom: 6px;"><strong>Role:</strong> Global self-attention across 16×16 non-overlapping patches (256 tokens) with dynamic positional embedding.</p>
+              <p><strong>Guidance:</strong> Attention rollout generates spatial importance map A, and CLS token generates FiLM channel modulation vectors.</p>
+            </div>
+          </div>
+
+          <div class="arch-connector">&darr; Cross-Attention & Stream Fusion &darr;</div>
+
+          <div class="arch-node" style="border-color: rgba(37, 99, 235, 0.3); background: rgba(37, 99, 235, 0.05);">
+            <h4 style="color: #93c5fd;">Cross-Attention Fusion & Frequency Stream</h4>
+            <p style="margin-bottom: 8px;">
+              CNN feature tokens cross-attend to ViT patch tokens. High-pass SRM (Spatial Rich Model) filters extract high-frequency noise residuals.
+            </p>
+            <p style="font-family: var(--font-mono); font-size: 11.5px; color: #cbd5e1;">
+              Output = [pool(CNN) || CLS_token || SRM_residual] &rarr; MLP Head &rarr; Calibrated Logit (BCE with Logits)
+            </p>
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- TAB 4: PROJECT REPORT & TEAM -->
+    <section id="tab-report" class="tab-content">
+      
+      <div class="hero-box">
+        <h2 style="font-size: 16px; margin-bottom: 4px;">Project Authors & Academic Context</h2>
+        <div style="font-size: 12.5px; color: var(--accent-blue-light); margin-bottom: 18px;">
+          Bennett University &bull; Intelligent Model Design Using AI (Sem 5)
+        </div>
+
+        <!-- Team Grid -->
+        <div class="team-grid">
+          <div class="member-card">
+            <div class="member-avatar">SS</div>
+            <div class="member-details">
+              <h4>Shashank Solaiappan</h4>
+              <div class="member-id">S24CSEU2692</div>
+              <div class="member-role">ViT-Guided Pipeline & Model Architecture</div>
+            </div>
+          </div>
+          <div class="member-card">
+            <div class="member-avatar">BM</div>
+            <div class="member-details">
+              <h4>Brajraj Mahajan</h4>
+              <div class="member-id">S24CSEU2543</div>
+              <div class="member-role">CNN Baseline Model & Local Texture Extraction</div>
+            </div>
+          </div>
+          <div class="member-card">
+            <div class="member-avatar">UM</div>
+            <div class="member-details">
+              <h4>Uma Shankar Mannuru</h4>
+              <div class="member-id">S24CSEU2552</div>
+              <div class="member-role">Vision Transformer (ViT) & Patch Attention</div>
+            </div>
+          </div>
+          <div class="member-card">
+            <div class="member-avatar">NV</div>
+            <div class="member-details">
+              <h4>Nidhi Verma</h4>
+              <div class="member-id">S24CSEU2553</div>
+              <div class="member-role">Data Pipelines, Leakage Audit & Robustness Benchmarking</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top: 24px; display: flex; flex-direction: column; gap: 14px;">
+          <div class="card-benchmark" style="margin-bottom: 0;">
+            <h4 style="font-size: 13.5px; color: #fff; margin-bottom: 6px;">Executive Summary</h4>
+            <p style="font-size: 12.5px; color: var(--text-secondary); line-height: 1.6;">
+              DeepTruth AI implements genuine machine learning models trained on 140,000 real and fake face images (FFHQ vs StyleGAN). By combining spatial attention rollout from DINOv2 with local feature extraction from EfficientNet-B0 and an SRM high-pass frequency filter, the proposed ViT-Guided CNN achieves an AUC of 0.9560 on the 20,000-image test set, outperforming both standalone backbones.
+            </p>
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- App Footer -->
+  <footer class="app-footer">
+    <div class="container">
+      <p>DeepTruth AI &bull; Intelligent Model Design Using AI &bull; Bennett University</p>
+    </div>
+  </footer>
+
+  <script src="/static/js/app.js"></script>
+</body>
+</html>
